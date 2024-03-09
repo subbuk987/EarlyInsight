@@ -5,6 +5,7 @@ from schemas import user , login ,medicalData
 from sqlalchemy.orm import Session
 from hashing import Hash
 from trained_models.predictor import prediction
+import random
 
 app = FastAPI()
 models.Base.metadata.create_all(bind=engine)
@@ -31,12 +32,6 @@ def create_user(user_details : user , db : Session = Depends(get_db)):
         db.add(users)
         db.commit()
         db.refresh(users) 
-
-
-    
-   
-
-
 
 @app.post('/login')
 def login(login_details : login,db : Session = Depends(get_db)):
@@ -108,6 +103,24 @@ def getDiabeticInfo(username : str, db : Session = Depends(get_db)):
     diabetes_requirements.append(user.diabetesPedigree)
     diabetes_requirements.append(user.age)
     dia_predict = prediction.predict_diabetes(diabetes_requirements)
+
+    user_preds = db.query(models.UserPreds).filter(models.UserPreds.username==username).first()
+    if not user_preds:
+        user_pred_add = models.UserPreds(pid = random.randint(100, 999),
+                                         username = username,
+                                         diabeticPred_0 = dia_predict["Non - Diabetic Chances"],
+                                         diabeticPred_1 = dia_predict["Diabetic Chances"]
+                                        )
+        db.add(user_pred_add)
+        db.commit()
+        db.refresh(user_pred_add)
+    else:
+        user_preds.diabeticPred_0 = diabeticPred_0 = dia_predict["Non - Diabetic Chances"]
+        user_preds.diabeticPred_1 = diabeticPred_1 = dia_predict["Diabetic Chances"]
+        db.add(user_preds)
+        db.commit()
+        db.refresh(user_preds)
+
     return dia_predict
 
 @app.post('/getobesityinfo')
@@ -125,6 +138,30 @@ def getObesityInfo(username : str, db :Session = Depends(get_db)):
     obese_requirements.append(user.physical_activity_lv_3)
     obese_requirements.append(user.physical_activity_lv_4)
     obesity_predict = prediction.predict_obesity(obese_requirements)
+    option = 0
+    if obesity_predict["Normal Weight"]==1:
+        option = 1
+    elif obesity_predict["Overweight"] == 1:
+        option = 2
+    elif obesity_predict["Obese"] == 1:
+        option = 3
+    else :
+        option = 4
+
+    user_preds = db.query(models.UserPreds).filter(models.UserPreds.username==username).first()
+    if not user_preds:
+        user_pred_add = models.UserPreds(pid = random.randint(100, 999),
+                                         username = username,
+                                         obesity_predict = option
+                                        )
+        db.add(user_pred_add)
+        db.commit()
+        db.refresh(user_pred_add)
+    else:
+        user_preds.obesityPred = option
+        db.add(user_preds)
+        db.commit()
+        db.refresh(user_preds)
 
     return obesity_predict
 
@@ -155,6 +192,23 @@ def getHeartInfo(username : str, db : Session = Depends(get_db)):
     heart_requirements.append(user.st_slope_up)
 
     heart_predictions = prediction.predict_heart_health(heart_requirements)
+    user_preds = db.query(models.UserPreds).filter(models.UserPreds.username==username).first()
+    if not user_preds:
+        user_pred_add = models.UserPreds(pid = random.randint(100, 999),
+                                         username = username,
+                                         heartPred_0 = heart_predictions["Heart Safety Probability"],
+                                         heartPred_1 = heart_predictions["Heart Failure Probability"]
+                                        )
+        db.add(user_pred_add)
+        db.commit()
+        db.refresh(user_pred_add)
+    else:
+        user_preds.heartPred_0 = heart_predictions["Heart Safety Probability"]
+        user_preds.heartPred_1 = heart_predictions["Heart Failure Probability"]
+        db.add(user_preds)
+        db.commit()
+        db.refresh(user_preds)
+
 
     return heart_predictions
 

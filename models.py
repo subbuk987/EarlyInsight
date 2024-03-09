@@ -61,6 +61,8 @@ class UserPreds(Base):
 
     pid = Column(String(20),primary_key=True)
     username = Column(String(20))
-    heartPred = Column(Float)
+    heartPred_0 = Column(Float)
+    heartPred_1 = Column(Float)
     obesityPred = Column(Float)
-    diabeticPred = Column(Float)
+    diabeticPred_0 = Column(Float)
+    diabeticPred_1 = Column(Float)

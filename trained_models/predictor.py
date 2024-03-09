@@ -10,6 +10,7 @@ from typing import List
 heartfile = './trained_models/best_model_heart_failure.joblib'
 diabetesfile = './trained_models/best_diabetes_model.joblib'
 obesityfile = './trained_models/best_model_obesity_analysis.joblib'
+
 heart_model = load(filename=heartfile)
 diabetes_model = load(filename=diabetesfile)
 obesity_model = load(filename=obesityfile)
